@@ -7,7 +7,7 @@
 - [Lorenzo Lellini](https://github.com/LorenzoLellini)
 - [Luca Sorini](https://github.com/lucasorini)
 
-## JUCE File:
+## SuperCollider File:
 > Drum Machine
 
 ## OVERLEAF LaTeX REPORT LINK:
