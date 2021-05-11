@@ -161,6 +161,80 @@ SynthDef(\keyboard, {
 )
 
 ///////////////////
+// MIDI Connections
+
+(
+var notes, on, off; // must be set as global variable
+MIDIClient.init;
+MIDIIn.connectAll;
+notes = Array.newClear(128);    // array has one slot per possible MIDI note
+
+ MIDIFunc.noteOn({
+		arg  num;
+	notes[num] = Synth(\kick,[45], \clap[46] ).moveAfter(i);
+});
+
+off = MIDIFunc.noteOff({
+	arg num;
+	notes[num].free;
+	notes[num] = nil;
+
+});
+q = { on.free; off.free; };
+
+//MIDIFunc.trace(bool: true); // important for DEBUGGING
+)
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//MIDI 2
+
+(
+var keys;
+
+keys = Array.newClear(128); //128 notes
+
+
+//Note on message
+~noteOnFunc = {
+	arg val, num, channel , src;
+	//midi message channel from 0 to 15
+	//val is the value of the note (velocity)
+	//num is the number of the note (midi note)
+
+	var note;
+
+	note = keys.at(num);
+
+	if (note.notNil, {
+		note.release;
+		keys.put(num, nil);
+	});
+
+	note = Synth.tail(nil, \rhodes, [\freq, num.midicps, \amp, val/(127)]);
+	//num.midicps convert the midi into a frequency
+	keys.put(num, note);
+	[num,val].postln;
+};
+
+a = MIDIFunc.noteOn(func: ~noteOnFunc);
+
+//Note off message
+~noteOffFunc = {
+	arg val, num, chan, src;
+	var note;
+
+	note=keys.at(num);
+		//////////////////////
+	if (note.notNil, {
+		note.set(\gate, 0);
+		note.release;
+		keys.put(num, nil);
+	});
+};
+
+b = MIDIFunc.noteOff(func: ~noteOffFunc);
+)
+/////////////
 
 // solo per sentire i suoni della DrumKit in sequenza
 
