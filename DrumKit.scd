@@ -163,7 +163,28 @@ SynthDef(\keyboard, {
 )
 
 ///////////////////
+MIDIIn.connectAll;
 
+(
+var noteArray = Array.newClear(128); // array has one slot per possible MIDI note
+
+MIDIdef.noteOn(\myKeyDown, {arg vel, note;
+	//noteArray[note] = Synth(\alien, [\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
+	if (note < 50){
+		noteArray[note] = Synth(\alien,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])}
+	//if (note>50)
+	{
+		noteArray[note] = Synth(\keyboard,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+	["NOTE ON", note].postln;
+});
+
+MIDIdef.noteOff(\myKeyUp, {arg vel, note;
+	noteArray[note].set(\gate, 0);
+	["NOTE OFF", note].postln;
+});
+)
+
+///////////////////
 // solo per sentire i suoni della DrumKit in sequenza
 
 (
