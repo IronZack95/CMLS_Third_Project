@@ -163,6 +163,8 @@ SynthDef(\keyboard, {
 )
 
 ///////////////////
+// MIDI section
+
 MIDIIn.connectAll;
 
 (
@@ -172,8 +174,7 @@ MIDIdef.noteOn(\myKeyDown, {arg vel, note;
 	//noteArray[note] = Synth(\alien, [\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
 	if (note < 50){
 		noteArray[note] = Synth(\alien,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])}
-	//if (note>50)
-	{
+	if (note>50){
 		noteArray[note] = Synth(\keyboard,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	["NOTE ON", note].postln;
 });
