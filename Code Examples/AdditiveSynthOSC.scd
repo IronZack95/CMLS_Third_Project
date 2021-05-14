@@ -26,18 +26,62 @@ synth2 = Synth(\s1,[\freq, 880,\amp,0.5,\pan,1]);
 OSCdef('OSCreceiver',
 	{
 		arg msg;
-
-		x = msg[1];
-		y = msg[2];
+		x = msg[1]*1000;
 		// x corresponds to panning, so it has to be between -1 and 1 (now is between 0 and 1)
-		x = (x-0.5)/0.5;
-
-		postln("x: "+x+" - y: "+y);
-		synth1.set(\amp,y,\pan,x);
-		synth2.set(\amp,1-y,\pan,1-x);
-
+		postln("freq: "+x);
+		synth1.set(\freq,x);
 	},
-	"/pos");
+	'/1/fader2');
+
+OSCdef('OSCreceiver2',
+	{
+		arg msg;
+		x = msg[1];
+		// x corresponds to panning, so it has to be between -1 and 1 (now is between 0 and 1)
+		postln("pan: "+x);
+		synth1.set(\pan,2*(x-0.5));
+	},
+	'/1/fader5');
+
+OSCdef('OSCreceiver3',
+	{
+		arg msg;
+		x = msg[1];
+		// x corresponds to panning, so it has to be between -1 and 1 (now is between 0 and 1)
+		postln("amp: "+x);
+		synth1.set(\amp,x);
+	},
+	'/1/fader1');
+// osc2
+OSCdef('OSCreceiver1',
+	{
+		arg msg;
+		x = msg[1]*1000;
+		// x corresponds to panning, so it has to be between -1 and 1 (now is between 0 and 1)
+		postln("freq: "+x);
+		synth2.set(\freq,x);
+	},
+	'/1/fader4');
+
+OSCdef('OSCreceiver5',
+	{
+		arg msg;
+		x = msg[1];
+		// x corresponds to panning, so it has to be between -1 and 1 (now is between 0 and 1)
+		postln("pan: "+x);
+		synth2.set(\pan,2*(x-0.5));
+	},
+	'/1/fader5');
+
+OSCdef('OSCreceiver6',
+	{
+		arg msg;
+		x = msg[1];
+		// x corresponds to panning, so it has to be between -1 and 1 (now is between 0 and 1)
+		postln("amp: "+x);
+		synth2.set(\amp,x);
+	},
+	'/1/fader3');
 )
 
 
