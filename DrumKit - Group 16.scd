@@ -173,7 +173,7 @@ var noteArray = Array.newClear(128); // array has one slot per possible MIDI not
 MIDIdef.noteOn(\myKeyDown, {arg vel, note;
 	//noteArray[note] = Synth(\alien, [\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
 	if (note < 50){
-		noteArray[note] = Synth(\alien,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])}
+		noteArray[note] = Synth(\alien,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note>50){
 		noteArray[note] = Synth(\keyboard,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	["NOTE ON", note].postln;
