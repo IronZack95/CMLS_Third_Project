@@ -330,12 +330,12 @@ Ppar([
 
 
 
-
+// chorus
 
 (
 
 
-// chorus
+
 {
 	var source;
 	var fx;
