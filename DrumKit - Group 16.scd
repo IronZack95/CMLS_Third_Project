@@ -1,7 +1,10 @@
-// vari suoni drumkit
+// CMLS - GROUP 16
+//////////////////////////////
+// SECTION 1 - DRUM KIT SOUNDS
+//////////////////////////////
 
 (
-// 1-Kick
+// 1-Light Kick
 SynthDef(\kick, {
     |out = 0, pan = 0, amp = 0.3|
     var body, bodyFreq, bodyAmp;
@@ -26,9 +29,81 @@ SynthDef(\kick, {
     Out.ar(out, Pan2.ar(snd, pan, amp));
 }).add;
 
-// 2-Snare
+// 2-Techno Kick
+SynthDef(\technokick, {
+	| freq=51.913087197493, amp=0.5, rel=0.28571428571429, out=0, click=0.008, spread=0.1, damp=0.6 gate=1 |
+	var sig, env1, aEnv, env2, wEnv, vEnv, low, high, dry, verb, verbHi, verbLo;
+	// env.ar is really good for this since thie envelopes are so short
+	env1 = EnvGen.ar(Env.adsr(0,0.1,0,0, curve: -4, bias: 1)); // initial attack
+	env2 = EnvGen.ar(Env.adsr(0,click,0,0,32, bias:1)); // click adder
+	aEnv = EnvGen.kr(Env.perc(0.005, rel/1.75, curve: 2)); // amplitude
+	wEnv = EnvGen.ar(Env.adsr(0,0.01,0,0, curve: -4));
+
+	vEnv = EnvGen.kr(Env.adsr(rel, rel/2, 1, 0.01, curve: 3),
+		gate, doneAction: Done.freeSelf); // for reverb
+	// separate signals for extra processing
+	low  = SinOsc.ar(freq * env1 * env2);
+	high = WhiteNoise.ar() * wEnv * 0.6;
+	high = BBandPass.ar(high, 1000, 2);
+	dry = Mix.new([low, high]) * aEnv;
+	//dry = CrossoverDistortion.ar(dry * 0.3, 0.9, 1);
+	// dry = dry * 0.25;
+	// equalizer
+	dry = BPeakEQ.ar(dry, 5500, db: 10);
+	dry = BPeakEQ.ar(dry, 360, db: -12, rq: 2);
+	dry = BLowShelf.ar(dry, 300, db: 6).distort;
+	// compression
+	dry = Compander.ar(dry, dry, thresh: 0.5,
+		slopeBelow: 1.75, slopeAbove: 0.75,
+		clampTime: 0.002, relaxTime: 0.1, mul: 5);
+	// finalize dry signal
+	dry = Pan2.ar(dry * aEnv);
+	// create reverb signal
+	// verb = FreeVerb2.ar(dry[0],dry[1],mix: 1,room: 1, damp: 1).distort * vEnv;
+	verb = GVerb.ar(dry, roomsize: 10, revtime: 5,
+		damping: damp, drylevel: 0, earlyreflevel: 0.5, taillevel: 1,
+		maxroomsize: 100, mul: 1) ;
+	// Sum the double stereo output into a single stereo one
+	verb = verb.sum;
+	// eq
+	verb = BLowPass.ar(verb, 400+freq,2);
+	// Reduce stereo spread, and balance audio to be level no matter the spread (more or less)
+	verbHi = BHiPass.ar(verb, 200);
+	verbHi = Balance2.ar(verbHi[0] + (verbHi[1] * spread), // left
+		verbHi[1] + (verbHi[0] * spread), level: 0.5 + (1-spread)); // right
+	// Keep low frequencies in mono
+	verbLo = BLowPass.ar(verb, 200);
+	verbLo = Balance2.ar(verbLo[0] + verbLo[1], verbLo[1] + verbLo[0], level: 0.5);
+	verb = verbHi + verbLo;
+	verb = Compander.ar(verb,verb, thresh: 0.5,
+		slopeBelow: 1.75, slopeAbove: 0.75,
+		clampTime: 0.002, relaxTime: 0.1, mul: 0.25) * vEnv;
+	// finalize signals
+	sig = dry + verb;
+	sig = Compander.ar(sig,sig, thresh: 0.5,
+		slopeBelow: 0.59, slopeAbove: 1,
+		clampTime: 0.002, relaxTime: 0.1, mul: 1);
+	Out.ar(out, sig);
+}).add;
+
+// 3-Gabbber Kick
+SynthDef(\gabberkick, {
+    var snd;
+    snd = SinOsc.ar(Env([1000, 69, 60], [0.015, 0.1], \exp).ar * [-0.1, 0, 0.1].midiratio);
+    snd = Mix(snd);
+    snd = (snd * 10).tanh;
+    snd = (snd * 5.1).atan;
+    snd = BPeakEQ.ar(snd, XLine.kr(2000, 100, 0.3), 2.0, 8);
+    snd = snd + DelayC.ar(snd, 0.01, SinOsc.ar(4).range(0.0, 0.001));
+    snd = RLPF.ar(snd, 8000, 0.7);
+    snd = snd * Env([0, 1, 0.7, 0.7, 0], [0.001, 0.01, 0.3, 0.02]).ar(2);
+    snd = (snd * 0.6).clip(-1, 1);
+    Out.ar(\out.kr(0), Pan2.ar(snd, \pan.kr(0), \amp.kr(0.1)));
+}).add;
+
+// 4-Snare
 SynthDef(\snare, {
-    |out = 0, pan = 0, amp = 0.3|
+	|out = 0, pan = 0, amp = 0.3|
     var pop, popAmp, popFreq;
     var noise, noiseAmp;
     var snd;
@@ -45,7 +120,25 @@ SynthDef(\snare, {
     Out.ar(out, Pan2.ar(snd, pan, amp));
 }).add;
 
-// 3-Hihat
+// 5-Heavy Snare
+SynthDef(\neurosnare, {
+    var snd;
+    // a percussive click to give it some attack
+    snd = LPF.ar(HPF.ar(WhiteNoise.ar, 300), 8000) * Env.linen(0.001, 0.01, 0.001).ar;
+    // sine sweep body. very important!
+    snd = snd + (SinOsc.ar(Env([400, 196, 160], [0.04, 0.2], \exp).ar) * Env.perc(0.04, 0.2).ar * 6.dbamp).tanh;
+    // sound of snare coils rattling
+    snd = snd + (HPF.ar(BPeakEQ.ar(WhiteNoise.ar, 4000, 0.5, 3), 300) * Env.perc(0.05, 0.2).delay(0.01).ar(2) * -3.dbamp);
+    // another sound sweep to improve the attack, optional
+    snd = snd + (SinOsc.ar(XLine.kr(3000, 1500, 0.01)) * Env.perc(0.001, 0.02).ar);
+    // distortion helps glue everything together and acts as a compressor
+    snd = (snd * 1.4).tanh;
+    snd = Pan2.ar(snd, \pan.kr(0), \amp.kr(0.1));
+    Out.ar(\out.kr(0), snd);
+}).add;
+
+
+// 6-HiHat
 SynthDef(\hihat, {arg out = 0, amp = 0.5, att = 0.01, rel = 0.2, ffreq = 6000, pan = 0;
 	var env, snd;
 	env = Env.perc(att, rel, amp).kr(doneAction: 2);
@@ -54,7 +147,7 @@ SynthDef(\hihat, {arg out = 0, amp = 0.5, att = 0.01, rel = 0.2, ffreq = 6000, p
 	Out.ar(out, Pan2.ar(snd, pan));
 }).add;
 
-// 4-Clap
+// 7-Clap
 SynthDef(\clap, {
     |out = 0, amp = 0.5, pan = 0, dur = 1|
     var env1, env2, snd, noise1, noise2;
@@ -84,7 +177,27 @@ SynthDef(\clap, {
     Out.ar(out, Pan2.ar(snd,pan,amp));
 }).add;
 
-// 5-Pluck
+// 8-Cowbell
+SynthDef(\cowbell, {
+    | out=0, amp=0.3, gate=1, fund_freq=540, pan=0.0 |
+    var sig, env;
+
+    sig = Pulse.ar( fund_freq * [ 1, 1.5085 ], [ 0.565, 0.445 ], [ 0.4, 0.6 ] ).distort;
+    env = EnvGen.ar(
+            Env(
+                [ 0, 0.05, 1, 0.1, 0 ], [ 0.003, 0.002, 0.05, 0.5 ], [2, -4, -4, -4]
+            ),
+        gate: gate,
+        timeScale: [ 1.0, 1.5 ],
+        doneAction: 2
+        );
+    sig = Mix( sig * env );
+    sig = BPF.ar( sig, fund_freq * 2, 1.808 );
+
+    Out.ar( out, Pan2.ar( sig, pan, amp ) );
+}).add;
+
+// 9-Pluck
 SynthDef(\pluck, {arg out = 0, amp = 0.1, freq = 440, decay = 5, coef = 0.1;
 	var env, snd;
 	env = EnvGen.kr(Env.linen(0, decay, 0), doneAction: 2);
@@ -100,92 +213,60 @@ SynthDef(\pluck, {arg out = 0, amp = 0.1, freq = 440, decay = 5, coef = 0.1;
 	Out.ar(out, snd * env);
 }).add;
 
-// 6-Gong Percussion
-SynthDef(\dong, {
-	arg out= 0, pan= 0, freq= 400, amp= 0.1, dur= 2, t_trig=1;
-	var amps= [1, 0.67, 1, 1.8, 2.67, 1.67, 1.46, 1.33, 1.33, 1, 1.33];
-	var durs= [1, 0.9, 0.65, 0.55, 0.325, 0.35, 0.25, 0.2, 0.15, 0.1, 0.075];
-	var frqs= [0.56, 0.56, 0.92, 0.92, 1.19, 1.7, 2, 2.74, 3, 3.76, 4.07];
-	var dets= [0, 1, 0, 1.7, 0, 0, 0, 0, 0, 0, 0];
-
-	var src= Mix.fill(11, {
-		arg i;
-		var env = EnvGen.ar(Env.perc(0.005, dur*durs[i], amps[i], -4.5), t_trig);
-		SinOsc.ar(freq*frqs[i]+dets[i], 0, amp*env);
-	});
-
-	Out.ar(out, Pan2.ar(src, pan));
-}).add;
-
-// 7-Alien Sound
-SynthDef(\alien, { arg freq = 500, amp = 4;
-    var env, snd;
-
-    env = Env.perc(level: amp).kr(2);
-    snd = BPF.ar(
-        in: LFPulse.ar(
-            freq: LFNoise0.kr([8,19]).range(freq, freq*2),
-            mul: env),
-        freq: MouseY.kr(500, 2500),
-        rq: 0.1
-    );
-
-    Out.ar(0, snd);
-}).add;
-
-// 8-Keyboard Synth
-SynthDef(\keyboard, {
-    |
-    out = 0, freq = 440, gate = 1, pan = 0, amp = 0.1,
-    // all of these range from 0 to 1
-    modIndex = 0.2, mix = 0.2, lfoSpeed = 4.8, lfoDepth = 0.1
-    |
-    var env1, env2, env3, env4;
-    var osc1, osc2, osc3, osc4, snd;
-
-    env1 = EnvGen.ar(Env.adsr(0.001, 1.25, 0.0, 0.04, curve: \lin)) ;
-    env2 = EnvGen.ar(Env.adsr(0.001, 1.00, 0.0, 0.04, curve: \lin)) ;
-    env3 = EnvGen.ar(Env.adsr(0.001, 1.50, 0.0, 0.04, curve: \lin)) ;
-    env4 = EnvGen.ar(Env.adsr(0.001, 1.50, 0.0, 0.04, curve: \lin)) ;
-
-    osc4 = SinOsc.ar(freq * 0.5) * 2pi * 2 * 0.535887 * modIndex* env4 ;
-    osc3 = SinOsc.ar(freq, osc4) * env3;
-    osc2 = SinOsc.ar(freq * 15) * 2pi * 0.108819 * env2;
-    osc1 = SinOsc.ar(freq, osc2) * env1;
-
-	snd = (osc3 * (1 - mix)) + (osc1 * mix);
-    snd = snd * (SinOsc.ar(lfoSpeed) * lfoDepth + 1);
-    snd = snd * EnvGen.ar(Env.asr(0, 1, 0.1), gate, doneAction: 2);
-    snd = Pan2.ar(snd, pan, amp);
-
-    Out.ar(out, snd);
+// 10-Synth
+SynthDef("spacey", { arg freq, amp;
+	var snd, env;
+	env = Env.perc(level: amp).kr(2);
+	snd = LFSaw.ar(freq: freq, mul: env);
+	snd = RLPF.ar(
+		in: snd,
+		freq: LFNoise1.kr(2).range(500, 20000),
+		rq: 0.2
+	);
+	Out.ar(0, snd);
 }).add;
 )
 
+
 ///////////////////
 // MIDI section
+///////////////////
 
 MIDIIn.connectAll;
 
 (
 var noteArray = Array.newClear(128); // array has one slot per possible MIDI note
 
+
+
 MIDIdef.noteOn(\myKeyDown, {arg vel, note;
-	//noteArray[note] = Synth(\alien, [\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
-	if (note < 50){
-		noteArray[note] = Synth(\alien,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
-	if (note>50){
-		noteArray[note] = Synth(\keyboard,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
-	["NOTE ON", note].postln;
+    // Keyboard division to play every sound
+    if (note < 50){
+        noteArray[note] = Synth(\alien,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+    if (note>50){
+        noteArray[note] = Synth(\keyboard,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+    ["NOTE ON", note].postln;
 });
 
+
+
 MIDIdef.noteOff(\myKeyUp, {arg vel, note;
-	noteArray[note].set(\gate, 0);
-	["NOTE OFF", note].postln;
+    noteArray[note].set(\gate, 0);
+    ["NOTE OFF", note].postln;
 });
 )
 
 ///////////////////
+// OSC section
+///////////////////
+
+
+///////////////////
+// Serial section
+///////////////////
+
+
+/////////////////// -> Da Eliminare
 // solo per sentire i suoni della DrumKit in sequenza
 
 (
@@ -196,7 +277,7 @@ base = Pbind(\amp, 0.3);
 Ppar([
     Pbindf(
         base,
-		\instrument, Pseq([\keyboard, \alien, \pluck, \dong, \kick, \snare], inf),
+		\instrument, Pseq([\technokick, "spacey", \pluck, \keyboard, \kick, \snare], inf),
         \dur, Pseq([4, 3, 3, 2, 4], inf)
     ),
     Pbindf(
@@ -206,3 +287,4 @@ Ppar([
     )
 ]).play(TempoClock(2.3 * 4));
 )
+
