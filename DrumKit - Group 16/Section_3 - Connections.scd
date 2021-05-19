@@ -34,16 +34,16 @@ MIDIdef.noteOff(\myKeyUp, {arg vel, note;
 ///////////////////
 // OSC section
 ///////////////////
-
+(
 OSCdef('OSCreceiver3',
 	{
 		arg msg;
 		x = msg[1];
 		postln("OSC: "+x);
-		synth1.set(\amp,x);
+		//synth1.set(\amp,x);
 	},
 	'/1/fader1');
-
+)
 ///////////////////
 // Serial section
 ///////////////////
@@ -71,5 +71,7 @@ OSCdef('OSCreceiver3',
 	}.loop;
 }).play;
 )
+
+// CLOSE CONNECTIONS
 ~getValues.stop;
-~port.close;
+~port.close;ARD
