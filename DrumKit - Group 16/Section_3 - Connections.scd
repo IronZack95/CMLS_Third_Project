@@ -11,62 +11,89 @@ s.boot;
 // Inizializzo gruppi per effetti, pad e synth
 
 (
-MIDIIn.connectAll;
+MIDIClient.init;
+MIDIClient.sources;           // elenco i controller
+MIDIClient.destinations;
+MIDIIn.connectAll;          // collego i controller
 ~drum = Bus.audio(s, 2);     // gruppi di suoni
 ~synth = Bus.audio(s, 2);
-~wet =  Synth.new(\wet, [\inBus, ~drum]);
-~reverb = Synth.new(\reverb, [\inBus, ~drum]);      // gruppi di uscite parallele
-~delay = Synth.new(\delay, [\inBus, ~drum]);
-~phase = Synth.new(\phasing, [\inBus, ~drum]);
+
+~drum_wet =  Synth.new(\wet, [\inBus, ~drum]);
+~drum_reverb = Synth.new(\reverb, [\inBus, ~drum]);      // gruppi di uscite parallele
+~drum_delay = Synth.new(\delay, [\inBus, ~drum]);
+~drum_phase = Synth.new(\phasing, [\inBus, ~drum]);
+
+~synth_wet =  Synth.new(\wet, [\inBus, ~synth]);
+~synth_reverb = Synth.new(\reverb, [\inBus, ~synth]);      // gruppi di uscite parallele
+~synth_delay = Synth.new(\delay, [\inBus, ~synth]);
+~synth_phase = Synth.new(\phasing, [\inBus,~synth]);
 //d = ParGroup.new;
 //g = ParGroup.new;
 )
 
 (
-g.freeAll;
-d.freeAll;
-g.free;
-d.free;
-~reverb.free;
-~delay.free;
-)
 
-// LAUNCHPAD MAPPING
-(
+var launchpadID = MIDIClient.sources.detect { |e| e.device.containsi("Launchpad S") }.uid();
+var keyboardID = MIDIClient.sources.detect { |e| e.device.containsi("Focusrite USB MIDI") }.uid();
+var noteArrayL = Array.newClear(128); // array has one slot per possible MIDI note
+var noteArrayK = Array.newClear(128); // array has one slot per possible MIDI note
 
-var noteArray = Array.newClear(128); // array has one slot per possible MIDI note
+    // LAUNCHPAD SOUNDS
+["Launchpad ID", launchpadID].postln();
+["Keyboard ID", keyboardID].postln();
+m = MIDIOut.newByName("Launchpad S", "Launchpad S");  // per colorare il launchpad
+//m.noteOn(16, 112, 127);
+//m.noteOff(16,112,0);
+MIDIFunc.noteOn({arg vel, note;
+	["Launchpad NOTE ON", note].postln;
 
-var numID= 2;
-
-MIDIdef.noteOn(\myKeyDown, {arg vel, note;
-    // Keyboard division to play every sound
 	if (note ==112){
-		noteArray[note] = Synth(\kick,[\out, ~drum, \freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+		noteArrayL[note] = Synth(\kick,[\out, ~drum, \freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==113){
-		noteArray[note] = Synth(\snare,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+		noteArrayL[note] = Synth(\snare,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==114){
-		noteArray[note] = Synth(\hihat,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+		noteArrayL[note] = Synth(\hihat,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==115){
-		noteArray[note] = Synth(\clap,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
-
+		noteArrayL[note] = Synth(\clap,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==96){
-		noteArray[note] = Synth(\neurosnare,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+		noteArrayL[note] = Synth(\neurosnare,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==97){
-		noteArray[note] = Synth(\technokick,[\out, ~drum, \amp, vel.linlin(0, 127, 0, 1)])};
+		noteArrayL[note] = Synth(\technokick,[\out, ~drum, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==98){
-		noteArray[note] = Synth(\gabberkick,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+		noteArrayL[note] = Synth(\gabberkick,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==99){
-		noteArray[note] = Synth(\cowbell,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
-
+		noteArrayL[note] = Synth(\cowbell,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==80){
-		noteArray[note] = Synth(\blueNoise,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+		noteArrayL[note] = Synth(\blueNoise,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==81){
-		noteArray[note] = Synth(\technokick,[\out, ~drum, \amp, vel.linlin(0, 127, 0, 1)])};
+		noteArrayL[note] = Synth(\technokick,[\out, ~drum, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==82){
-		noteArray[note] = Synth(\gabberkick,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+		noteArrayL[note] = Synth(\gabberkick,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	if (note ==83){
-		noteArray[note] = Synth(\cowbell,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+		noteArrayL[note] = Synth(\cowbell,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 
+	// LUCI NOTE ON
+	m.noteOn(16, note, vel);
+
+},nil,nil,launchpadID);
+
+MIDIFunc.noteOff({arg vel, note;
+    noteArrayL[note].set(\gate, 0);
+	// LUCI NOTE OFF
+	m.noteOn(16, note, vel);
+    ["Launchpad NOTE OFF", note].postln;
+},nil,nil,launchpadID);
+
+/// KEYBOARD MIDI
+
+MIDIFunc.noteOn({arg vel, note;
+
+	if (note < 60){
+		noteArrayK[note] = Synth(\sawSynth,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+	if (note >= 60 && note <= 80){
+		noteArrayK[note] = Synth(\pluck,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+	if (note > 80){
+		noteArrayK[note] = Synth(\feedbackPad3,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 	// piano
 	//noteArray[note] = Synth("harpsichord2",[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
 	//noteArray[note] = Synth("organDonor",[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
@@ -82,30 +109,92 @@ MIDIdef.noteOn(\myKeyDown, {arg vel, note;
 	//noteArray[note] = Synth("moogBass",[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
 	//noteArray[note] = Synth(\pluck,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
 
-	if (note < 80){
-		noteArray[note] = Synth(\sawSynth,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
-	["Launchpad NOTE ON", note].postln;
+	["Keyboard NOTE ON", note].postln;
 
-},nil,nil,numID);
+},nil,nil,keyboardID);
 
-MIDIdef.noteOff(\myKeyUp, {arg vel, note;
-    noteArray[note].set(\gate, 0);
-    ["Launchpad NOTE OFF", note].postln;
-},nil,nil,numID);
+MIDIFunc.noteOff({arg vel, note;
+    noteArrayK[note].set(\gate, 0);
+    ["Keyboard NOTE OFF", note].postln;
+},nil,nil,keyboardID);
 
 )
 ///////////////////
 // OSC section
 ///////////////////
 (
-OSCdef('OSCreceiver3',
+OSCdef('Drum_Wet',
 	{
 		arg msg;
 		x = msg[1];
-		postln("OSC: "+x);
-		synth1.set(\amp,x);
+		postln("Drum Wet: "+x);
+		~drum_wet.set(\gain,x/10);
 	},
-	'/1/toggle1');
+	'/1/fader1');
+
+OSCdef('Drum_Reverb',
+	{
+		arg msg;
+		x = msg[1];
+		postln("Drum Rev: "+x);
+		~drum_reverb.set(\gain,x/10);
+	},
+	'/1/fader2');
+
+OSCdef('Drum_Delay',
+	{
+		arg msg;
+		x = msg[1];
+		postln("Drum Dly: "+x);
+		~drum_delay.set(\gain,x/10);
+	},
+	'/1/fader3');
+
+OSCdef('Drum_Phase',
+	{
+		arg msg;
+		x = msg[1];
+		postln("Drum Phs: "+x);
+		~drum_phase.set(\gain,x/10);
+	},
+	'/1/fader4');
+// pagina 2
+OSCdef('Synth_Wet',
+	{
+		arg msg;
+		x = msg[1];
+		postln("Synth Wet: "+x);
+		~synth_wet.set(\gain,x);
+	},
+	'/2/fader1');
+
+OSCdef('Synth_Reverb',
+	{
+		arg msg;
+		x = msg[1];
+		postln("Synth Rev: "+x);
+		~synth_reverb.set(\gain,x);
+	},
+	'/2/fader2');
+
+OSCdef('Synth_Delay',
+	{
+		arg msg;
+		x = msg[1];
+		postln("Synth Dly: "+x);
+		~synth_delay.set(\gain,x);
+	},
+	'/2/fader3');
+
+OSCdef('Synth_Phase',
+	{
+		arg msg;
+		x = msg[1];
+		postln("Synth Phs: "+x);
+		~synth_phase.set(\gain,x);
+	},
+	'/2/fader4');
+
 )
 ///////////////////
 // Serial section
@@ -153,7 +242,7 @@ x = SynthDef("tutorial-map", { arg freq1 = 440, freq2 = 440;
     Out.ar(0, SinOsc.ar([freq1, freq2], 0, 0.1));
 }).play(s);
 )
-
+~reverb.set(\amp, 0.5)
 // CLOSE CONNECTIONS
 (
 ~getValues.stop;
