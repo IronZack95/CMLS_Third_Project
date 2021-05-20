@@ -87,6 +87,7 @@ SynthDef(\technokick, {
 
 // 3-Gabbber Kick
 SynthDef(\gabberkick, {
+	| out = 0|
     var snd;
     snd = SinOsc.ar(Env([1000, 69, 60], [0.015, 0.1], \exp).ar * [-0.1, 0, 0.1].midiratio);
     snd = Mix(snd);
@@ -97,7 +98,7 @@ SynthDef(\gabberkick, {
     snd = RLPF.ar(snd, 8000, 0.7);
     snd = snd * Env([0, 1, 0.7, 0.7, 0], [0.001, 0.01, 0.3, 0.02]).ar(2);
     snd = (snd * 0.6).clip(-1, 1);
-    Out.ar(\out.kr(0), Pan2.ar(snd, \pan.kr(0), \amp.kr(0.1)));
+    Out.ar(out, Pan2.ar(snd, \pan.kr(0), \amp.kr(0.1)));
 }).add;
 
 // 4-Snare
@@ -120,7 +121,7 @@ SynthDef(\snare, {
 }).add;
 
 // 5-Heavy Snare
-SynthDef(\neurosnare, {
+SynthDef(\neurosnare, {| out = 0|
     var snd;
     // a percussive click to give it some attack
     snd = LPF.ar(HPF.ar(WhiteNoise.ar, 300), 8000) * Env.linen(0.001, 0.01, 0.001).ar;
@@ -133,7 +134,7 @@ SynthDef(\neurosnare, {
     // distortion helps glue everything together and acts as a compressor
     snd = (snd * 1.4).tanh;
     snd = Pan2.ar(snd, \pan.kr(0), \amp.kr(0.1));
-    Out.ar(\out.kr(0), snd);
+    Out.ar(out, snd);
 }).add;
 
 
@@ -196,7 +197,37 @@ SynthDef(\cowbell, {
     Out.ar( out, Pan2.ar( sig, pan, amp ) );
 }).add;
 
-// 9-Pluck
+// 9-Noise
+SynthDef(\blueNoise, {
+	arg out = 0, pan = 0, amp = 0.1, gate = 1, att = 0.01, rel = 0.75, curve = -6;
+
+	var noise, a, b, c, d, e, f, g, h, i, env, snd;
+
+	noise = WhiteNoise.ar(1);
+
+	a = HPF.ar(noise, 62,    1/9);
+	b = HPF.ar(noise, 125,   1/9);
+	c = HPF.ar(noise, 250,   1/9);
+	d = HPF.ar(noise, 500,   1/9);
+	e = HPF.ar(noise, 1000,  1/9);
+	f = HPF.ar(noise, 2000,  1/9);
+	g = HPF.ar(noise, 4000,  1/9);
+	h = HPF.ar(noise, 8000,  1/9);
+	i = HPF.ar(noise, 16000, 1/9);
+
+	env = Env.perc(att, rel, amp, curve).kr(doneAction: 2);
+
+	snd = Mix([a, b, c, d, e, f, g, h, i]) * env;
+
+	Out.ar(out, Pan2.ar(snd, pan));
+}
+).add;
+
+////////////////////////////////////
+///SYNTHETIZER
+////////////////////////////////////
+
+// 1-Pluck
 SynthDef(\pluck, {arg out = 0, amp = 0.1, freq = 440, decay = 5, coef = 0.1;
 	var env, snd;
 	env = EnvGen.kr(Env.linen(0, decay, 0), doneAction: 2);
@@ -212,8 +243,8 @@ SynthDef(\pluck, {arg out = 0, amp = 0.1, freq = 440, decay = 5, coef = 0.1;
 	Out.ar(out, snd * env);
 }).add;
 
-// 10-Synth
-SynthDef("spacey", { arg freq, amp;
+// 2-Synth
+SynthDef(\spacey, { arg freq, amp, out = 0;
 	var snd, env;
 	env = Env.perc(level: amp).kr(2);
 	snd = LFSaw.ar(freq: freq, mul: env);
@@ -222,10 +253,312 @@ SynthDef("spacey", { arg freq, amp;
 		freq: LFNoise1.kr(2).range(500, 20000),
 		rq: 0.2
 	);
-	Out.ar(0, snd);
+	Out.ar(out, snd);
 }).add;
-)
 
+////////////////////////////////////
+///PAD
+////////////////////////////////////
+
+SynthDef(\arpoctave, {
+	arg
+	//Standard Controls:
+	out = 0, amp = 0.1, freq = 220, pan = 0, gate = 1, att = 0.3, rel = 1, crv = 0,
+	//Arp Controls: (mix goes from 0 to 1)
+	arprate = 10, arpatt = 0.7, arprel = 0.6, arpmix = 0.35,
+	//Chorus and Pitch Bend Controls:
+	chorusrate = 0.5, chorusdepth = 0.015, div = 0.25, glide = 0.15,
+	//Filter and Delay Controls:
+	rq = 0.75, cutoff = 8000, delayt = 0.25, decay = 2, delamp = 0.5;
+
+	var freqk, freqarp, chorus, bend, env, dry, envarp, arp, snd;
+
+//LFOs and Envelopes for Amps, Freqs, and the Filter Cutoff:
+
+	//Envelopes for the arp and dry signals (dry also controls the filter freq):
+	env = Env.asr(
+		        attackTime: att,
+		        releaseTime: rel,
+		        curve: crv).ar(gate: gate);
+	envarp = Env.asr(
+		        attackTime: arpatt,
+		        releaseTime: arprel,
+		        curve: crv).ar(gate: gate);
+
+	//A chorus-ish sound made by two freq LFOs perfectly out of phase:
+	chorus = SinOsc.ar(
+		        freq: chorusrate,
+		        phase: [0, pi]).range((1 - chorusdepth), (1 + chorusdepth));
+
+	//A bit of portamento at the start of the dry signal:
+	bend = Line.ar(start: div, end: 1, dur: glide);
+
+//The Arp and Dry Signals:
+
+	//This makes an aray of all octaves above and below the note being played:
+	freqk = ((freq * 2.pow(2/3)).cpsmidi.mod(12) + 16).midicps;
+	freqk = freqk * Array.fill(6, {arg i; 2.pow(i)}); // try 2 to 9 instead of 6
+
+	//This randomly jumps between those octaves:
+	freqarp = Select.kr(LFNoise0.ar(arprate).range(0, freqk.size), freqk);
+
+	//Arp: Experiment with waveforms!
+	arp = LFPulse.ar(freq: freqarp * chorus, mul: envarp);
+	arp = Mix.ar(arp);
+
+	//Dry: Experiment with waveforms!
+	dry = LFTri.ar(freq: freq * chorus * bend, mul: env);
+	dry = Mix.ar(dry);
+
+//Output Stuff:
+
+	//Mixer:
+	snd = XFade2.ar(dry, arp, ((arpmix * 2) - 1), amp);
+
+	//Low Pass Filter for mellowness:
+	snd = RLPF.ar(
+		        in: snd,
+		        freq: LinExp.ar(
+			                in: env,
+			                dstlo: freq,
+			                dsthi: cutoff),
+                rq: rq);
+
+	//Delay for Space:
+	snd = snd + CombN.ar(
+		            in: snd,
+		            maxdelaytime: delayt,
+		            delaytime: delayt,
+		            decaytime: decay,
+		            mul: delamp);
+
+	//Don't hurt your ears and equipment!
+	snd = Limiter.ar(LeakDC.ar(snd));
+
+	DetectSilence.ar(in: snd, doneAction: 2);
+	Out.ar(out, Pan2.ar(snd));
+}
+).add;
+
+
+SynthDef(\midSideSaw, {
+	arg
+	// Standard Values
+	out = 0, amp = 1, gate = 1, freq = 100, pan = 0, att = 0.25, rel = 3, crv = 0,
+	// Filter and Distortion Controls
+	filterLo = 100, filterHi = 2000, rq = 0.3, sidePreamp = 2, midPreamp = 1,
+	// Chorus and Mid/Side Controls (balance is 0 to 1 and monoSwitch is 0 or 1)
+	lfoFreq = 0.1, lfoDepth = 0.015, balance = 0.5, monoSwitch = 0;
+
+	var env, lfo, leftIn, rightIn, mid, side, leftOut, rightOut, snd;
+
+	// Envelope and LFO
+	env = Env.perc(
+		attackTime: att,
+		releaseTime: rel,
+		curve: crv).ar(doneAction: 2);
+
+	lfo = SinOsc.ar(
+		freq: lfoFreq,
+		phase: [0, pi]);
+	lfo = lfo.range(1 - lfoDepth, 1 + lfoDepth);
+
+	//Stereo signal with beatings
+	leftIn = LFSaw.ar(freq: freq * lfo[0]);
+	rightIn = LFSaw.ar(freq: freq * lfo[1]);
+
+	// L/R to M/S conversion
+	mid = (leftIn + rightIn)/2;
+	side = (leftIn - rightIn)/2;
+
+	// FX on the M/S signal
+	mid = RLPF.ar(
+		in: mid,
+		freq: LinExp.ar(
+			in: env,
+			srclo: 0, srchi: 1,
+			dstlo: filterLo, dsthi: filterHi),
+		rq: rq,
+		mul: midPreamp);
+	mid = mid.softclip/midPreamp.softclip;
+	mid = mid * (1 - balance).clip(0, 1) * env;
+
+	side = RLPF.ar(
+		in: side,
+		freq: LinExp.ar(
+			in: env,
+			srclo: 0, srchi: 1,
+			dstlo: filterHi, dsthi: filterLo),
+		rq: rq,
+		mul: sidePreamp);
+	side = side.softclip/sidePreamp.softclip;
+	side = side * balance.clip(0, 1) * env;
+
+	// Output Stuff and Converting Back to L/R
+	leftOut = mid + side;
+	rightOut = mid - side;
+	snd = Select.ar(
+		which: monoSwitch,
+		array: [
+			[leftOut, rightOut],
+			Pan2.ar(leftOut, pan)]);
+	snd = snd * amp;
+	snd = Limiter.ar(snd);
+
+	Out.ar(out, snd);
+}
+).add;
+
+SynthDef(\feedbackPad1, {
+	arg
+	// Standard Values
+	out = 0, amp = 1, gate = 1, freq = 75, pan = 0,
+	// Controls for ampEnv
+	att = 2, dec = 1, sus = 1, rel = 4, crv = 0,
+	// Controls for fbEnv
+	fbStartStop = 0, fbAtt = 3, fbPeak = 0.8, fbDec = 2, fbSus = 0.67, fbRel = 5,
+	// Confrols for delEnv
+	delStartStop = 0.55, delAtt = 1, delPeak = 0, delDec = 2, delSus = 0.25, delRel = 3.5;
+
+	var snd, fbIn, fbOut, ampEnv, fbEnv, delEnv;
+
+	// Set up the Envelopes
+	ampEnv = Env.adsr(
+		attackTime: att,
+		decayTime: dec,
+		sustainLevel: sus,
+		releaseTime: rel,
+		curve: crv).ar(gate: gate);
+
+	fbEnv = Env.adsr(
+		attackTime: fbAtt,
+		decayTime: fbDec,
+		sustainLevel: fbSus,
+		releaseTime: fbRel,
+		peakLevel: fbPeak,
+		curve: \lin,
+		bias: fbStartStop).ar(gate: gate);
+
+	delEnv = Env.adsr(
+		attackTime: delAtt,
+		decayTime: delDec,
+		sustainLevel: delSus,
+		releaseTime: delRel,
+		peakLevel: delPeak,
+		curve: \lin,
+		bias: delStartStop).ar(gate: gate);
+
+	// Receive the feedback
+	fbIn = LocalIn.ar;
+
+	// The Sound (yup, that's all it is)
+	snd = SinOsc.ar(
+		freq: freq,
+		phase: fbIn * pi);
+
+	// Delay the feedback
+	fbOut = DelayC.ar(
+		in: snd,
+		maxdelaytime: delStartStop.max(delPeak.max(delSus)),
+		delaytime: delEnv,
+		mul: fbEnv);
+
+	// Send the feedback
+	LocalOut.ar(fbOut);
+
+	// Output Stuff
+	snd = Mix.ar(snd) * ampEnv * amp;
+	snd = Limiter.ar(snd);
+
+    DetectSilence.ar(in: snd, doneAction: 2);
+
+	Out.ar(out, Pan2.ar(snd, pan));
+}
+).add;
+
+SynthDef(\feedbackPad3, {
+	arg
+	// Standard Values
+	out = 0, amp = 0.15, gate = 1, freq = 100, pan = 0,
+	// Envelope Controls
+	att = 3, dec = 1, sus = 1, rel = 5, crv = 0,
+	// Reverb Controls (all go from 0 to 1)
+	reverbMix = 0.75, roomSize = 0.9, damp = 0.5,
+	// Other Controls (interval is in semitones)
+	sampleRate = 20, notes = 6, interval = 7;
+
+	var env, fbIn, snd;
+
+	// Set up the Envelopes
+	env = Env.adsr(
+		attackTime: att,
+		decayTime: dec,
+		sustainLevel: sus,
+		releaseTime: rel,
+		curve: crv).ar(gate: gate);
+
+	// Receive and Sample the feedback
+	fbIn = Latch.ar(
+		in: (LocalIn.ar + 1)/2,
+		trig: Impulse.ar(
+			freq: sampleRate));
+	fbIn = (fbIn * notes.abs * env).round(1);
+	fbIn = (fbIn * interval).midiratio;
+
+	// Make The Sound
+	snd = LFTri.ar(
+		freq: freq * fbIn,
+		mul: env);
+
+	// Feedback the Sound
+	LocalOut.ar(snd);
+
+	// Reverb the Sound
+	snd = FreeVerb.ar(
+		in:  snd,
+		mix: reverbMix,
+		room: roomSize,
+		damp: damp);
+
+	//Filter the Sound
+	snd = RHPF.ar(
+		in: snd,
+		freq: freq,
+		rq: 0.5);
+	snd = LPF.ar(
+		in: snd,
+		freq: [62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000],
+		mul: 1/9);
+
+	// Output Stuff
+	snd = Mix.ar(snd) * amp;
+	snd = Limiter.ar(snd);
+
+	DetectSilence.ar(in: snd, doneAction: 2);
+
+	Out.ar(out, Pan2.ar(snd, pan));
+}
+).add;
+
+
+SynthDef(\sawSynth, { arg freq = 440, amp = 0.1, att = 0.1, rel = 2, lofreq = 1000, hifreq = 3000, pan = 0, out = 0;
+    var env, snd;
+    env = Env.perc(
+		attackTime: att,
+		releaseTime: rel,
+		level: amp
+	).kr(doneAction: 2);
+    snd = Saw.ar(freq: freq * [0.99, 1, 1.001, 1.008], mul: env);
+	snd = LPF.ar(
+		in: snd,
+		freq: LFNoise2.kr(1).range(lofreq, hifreq)
+	);
+    snd = Mix.ar(snd);
+	snd = Pan2.ar(snd, pan);
+    Out.ar(out, snd);
+}).add;
+
+)
 /////////////////// -> Da Eliminare
 // solo per sentire i suoni della DrumKit in sequenza
 
