@@ -11,39 +11,40 @@ s.boot;
 // Inizializzo gruppi per effetti, pad e synth
 
 (
-MIDIClient.init;
-MIDIClient.sources;           // elenco i controller
-MIDIClient.destinations;
-MIDIIn.connectAll;          // collego i controller
-~drum = Bus.audio(s, 2);     // gruppi di suoni
+var noteArrayL = Array.newClear(128); // array note launchpad
+var noteArrayK = Array.newClear(128); // array note key
+var launchpadID = MIDIClient.sources.detect { |e| e.device.containsi("Launchpad S") }.uid();
+var keyboardID = MIDIClient.sources.detect { |e| e.device.containsi("Focusrite USB MIDI") }.uid();
+var controlID = MIDIClient.sources.detect { |e| e.device.containsi("Launch Control") }.uid();
+var selKey = 0;
+
+         // collego i controller
+~sendOSC = NetAddr.new("192.168.1.5", 7771);    // OSC sending section
+~reciveOSC = NetAddr.new("127.0.0.1", NetAddr.langPort);
+
+~drum = Bus.audio(s, 2);     // creo gruppi di suoni
 ~synth = Bus.audio(s, 2);
 
-~drum_wet =  Synth.new(\wet, [\inBus, ~drum]);
+~drum_dry =  Synth.new(\dry, [\inBus, ~drum]);
 ~drum_reverb = Synth.new(\reverb, [\inBus, ~drum]);      // gruppi di uscite parallele
 ~drum_delay = Synth.new(\delay, [\inBus, ~drum]);
 ~drum_phase = Synth.new(\phasing, [\inBus, ~drum]);
 
-~synth_wet =  Synth.new(\wet, [\inBus, ~synth]);
+~synth_dry =  Synth.new(\dry, [\inBus, ~synth]);
 ~synth_reverb = Synth.new(\reverb, [\inBus, ~synth]);      // gruppi di uscite parallele
 ~synth_delay = Synth.new(\delay, [\inBus, ~synth]);
 ~synth_phase = Synth.new(\phasing, [\inBus,~synth]);
 //d = ParGroup.new;
 //g = ParGroup.new;
-)
 
-(
-
-var launchpadID = MIDIClient.sources.detect { |e| e.device.containsi("Launchpad S") }.uid();
-var keyboardID = MIDIClient.sources.detect { |e| e.device.containsi("Focusrite USB MIDI") }.uid();
-var noteArrayL = Array.newClear(128); // array has one slot per possible MIDI note
-var noteArrayK = Array.newClear(128); // array has one slot per possible MIDI note
-
-    // LAUNCHPAD SOUNDS
+///////////////////////////// LAUNCHPAD DEBUG
 ["Launchpad ID", launchpadID].postln();
 ["Keyboard ID", keyboardID].postln();
-m = MIDIOut.newByName("Launchpad S", "Launchpad S");  // per colorare il launchpad
-//m.noteOn(16, 112, 127);
-//m.noteOff(16,112,0);
+["Launch Control ID", controlID].postln();
+
+~luci  = MIDIOut.newByName("Launchpad S", "Launchpad S");  // per colorare il launchpad
+
+///////////////////////////// LAUNCHPAD SOUNDS
 MIDIFunc.noteOn({arg vel, note;
 	["Launchpad NOTE ON", note].postln;
 
@@ -73,27 +74,62 @@ MIDIFunc.noteOn({arg vel, note;
 		noteArrayL[note] = Synth(\cowbell,[\out, ~drum,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
 
 	// LUCI NOTE ON
-	m.noteOn(16, note, vel);
+	~luci.noteOn(16, note, vel);
 
 },nil,nil,launchpadID);
 
 MIDIFunc.noteOff({arg vel, note;
     noteArrayL[note].set(\gate, 0);
 	// LUCI NOTE OFF
-	m.noteOn(16, note, vel);
+	~luci.noteOn(16, note, vel);
     ["Launchpad NOTE OFF", note].postln;
 },nil,nil,launchpadID);
 
-/// KEYBOARD MIDI
+//////////////////////// LAUNCH CONTROL CC
+MIDIFunc.cc({arg vel, note;
+	var gain = vel/127;
+	if (note == 21){
+		~drum_dry.set(\gain,gain); ~sendOSC.sendMsg("/1/fader1", gain)};
+	if (note == 22){
+		~drum_reverb.set(\gain,gain); ~sendOSC.sendMsg("/1/fader2", gain)};
+	if (note == 23){
+		~drum_delay.set(\gain,gain); ~sendOSC.sendMsg("/1/fader3", gain)};
+	if (note == 24){
+		~drum_phase.set(\gain,gain); ~sendOSC.sendMsg("/1/fader4", gain)};
+	if (note == 41){
+		~synth_dry.set(\gain,gain); ~sendOSC.sendMsg("/2/fader1", gain)};
+	if (note == 42){
+		~synth_reverb.set(\gain,gain); ~sendOSC.sendMsg("/2/fader2", gain)};
+	if (note == 43){
+		~synth_delay.set(\gain,gain); ~sendOSC.sendMsg("/2/fader3", gain)};
+	if (note == 44){
+		~synth_phase.set(\gain,gain); ~sendOSC.sendMsg("/2/fader4", gain)};
+	["Launch CC", note, "value", vel].postln;
+},nil,nil,controlID);
+
+MIDIFunc.noteOff({arg vel, note;
+    noteArrayL[note].set(\gate, 0);
+	// LUCI NOTE OFF
+	~luci.noteOn(16, note, vel);
+    ["Launchpad NOTE OFF", note].postln;
+},nil,nil,launchpadID);
+
+/////////////////////// KEYBOARD MIDI
 
 MIDIFunc.noteOn({arg vel, note;
 
-	if (note < 60){
-		noteArrayK[note] = Synth(\sawSynth,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
-	if (note >= 60 && note <= 80){
-		noteArrayK[note] = Synth(\pluck,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
-	if (note > 80){
-		noteArrayK[note] = Synth(\feedbackPad3,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+	if (selKey == 0){       // DEFAULT SYNTH
+		noteArrayK[note] = Synth(\sawSynth,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
+	~sendOSC.sendMsg("/2/synth", "Saw Synth")};
+	if (selKey == 1){
+		noteArrayK[note] = Synth(\harpsichord2,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+	if (selKey == 2){
+		noteArrayK[note] = Synth(\feedbackPad1,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+	if (selKey == 3){
+		noteArrayK[note] = Synth(\midSideSaw,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+	if (selKey == 4){
+		noteArrayK[note] = Synth(\arpoctave,[\out, ~synth ,\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)])};
+
 	// piano
 	//noteArray[note] = Synth("harpsichord2",[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
 	//noteArray[note] = Synth("organDonor",[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
@@ -108,7 +144,6 @@ MIDIFunc.noteOn({arg vel, note;
 	//noteArray[note] = Synth(\superSaw,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
 	//noteArray[note] = Synth("moogBass",[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
 	//noteArray[note] = Synth(\pluck,[\freq, note.midicps, \amp, vel.linlin(0, 127, 0, 1)]);
-
 	["Keyboard NOTE ON", note].postln;
 
 },nil,nil,keyboardID);
@@ -118,17 +153,51 @@ MIDIFunc.noteOff({arg vel, note;
     ["Keyboard NOTE OFF", note].postln;
 },nil,nil,keyboardID);
 
-)
 ///////////////////
 // OSC section
 ///////////////////
-(
-OSCdef('Drum_Wet',
+
+~sendOSC.sendMsg("/1/label1", "Dry");   // Inizializzo i parametri dell'editor
+~sendOSC.sendMsg("/1/label2", "Rev");
+~sendOSC.sendMsg("/1/label3", "Dly");
+~sendOSC.sendMsg("/1/label4", "Phs");
+~sendOSC.sendMsg("/2/label1", "Dry");
+~sendOSC.sendMsg("/2/label2", "Rev");
+~sendOSC.sendMsg("/2/label3", "Dly");
+~sendOSC.sendMsg("/2/label4", "Phs");
+~sendOSC.sendMsg("/2/synth", "S  Y  N  T  H");
+~sendOSC.sendMsg("/2/label5", 0.0);
+~sendOSC.sendMsg("/2/label6", 0.0);
+~sendOSC.sendMsg("/2/label7", 0.0);
+~sendOSC.sendMsg("/2/label8", 0.0);
+~sendOSC.sendMsg("/1/fader1", 0);
+~sendOSC.sendMsg("/1/fader2", 0);
+~sendOSC.sendMsg("/1/fader3", 0);
+~sendOSC.sendMsg("/1/fader4", 0);
+~sendOSC.sendMsg("/1/fader5", 0);
+~sendOSC.sendMsg("/2/fader1", 0);
+~sendOSC.sendMsg("/2/fader2", 0);
+~sendOSC.sendMsg("/2/fader3", 0);
+~sendOSC.sendMsg("/2/fader4", 0);
+~sendOSC.sendMsg("/2/fader5", 0);
+~sendOSC.sendMsg("/1/toggle1", 0);
+~sendOSC.sendMsg("/1/toggle2", 0);
+~sendOSC.sendMsg("/1/toggle3", 0);
+~sendOSC.sendMsg("/1/toggle4", 0);
+~sendOSC.sendMsg("/1/toggle5", 0);
+~sendOSC.sendMsg("/2/toggle1", 0);
+~sendOSC.sendMsg("/2/toggle2", 0);
+~sendOSC.sendMsg("/2/toggle3", 0);
+~sendOSC.sendMsg("/2/toggle4", 0);
+~sendOSC.sendMsg("/2/toggle5", 0);
+
+
+OSCdef('Drum_Dry',
 	{
 		arg msg;
 		x = msg[1];
-		postln("Drum Wet: "+x);
-		~drum_wet.set(\gain,x/10);
+		postln("Drum Dry: "+x);
+		~drum_dry.set(\gain,x/10);
 	},
 	'/1/fader1');
 
@@ -159,12 +228,12 @@ OSCdef('Drum_Phase',
 	},
 	'/1/fader4');
 // pagina 2
-OSCdef('Synth_Wet',
+OSCdef('Synth_Dry',
 	{
 		arg msg;
 		x = msg[1];
-		postln("Synth Wet: "+x);
-		~synth_wet.set(\gain,x);
+		postln("Synth ry: "+x);
+		~synth_dry.set(\gain,x);
 	},
 	'/2/fader1');
 
@@ -194,6 +263,42 @@ OSCdef('Synth_Phase',
 		~synth_phase.set(\gain,x);
 	},
 	'/2/fader4');
+
+OSCdef('Synth_Toggle1',
+	{
+		arg msg;
+		x = msg[1];
+		postln("TOGGLE Synth: 1");
+		if(x==1,{selKey = 1;~sendOSC.sendMsg("/2/synth", "Harpsichord");},{selKey = 0} )
+	},
+	'/2/toggle1');
+
+OSCdef('Synth_Toggle2',
+	{
+		arg msg;
+		x = msg[1];
+		postln("TOGGLE Synth: 2");
+		if(x==1,{selKey = 2;~sendOSC.sendMsg("/2/synth", "Feedback Pad 1");},{selKey = 0} )
+	},
+	'/2/toggle2');
+
+OSCdef('Synth_Toggle3',
+	{
+		arg msg;
+		x = msg[1];
+		postln("TOGGLE Synth: 3");
+		if(x==1,{selKey = 3;~sendOSC.sendMsg("/2/synth", "Mid - Side - Saw");},{selKey = 0} )
+	},
+	'/2/toggle3');
+
+OSCdef('Synth_Toggle4',
+	{
+		arg msg;
+		x = msg[1];
+		postln("TOGGLE Synth: 4");
+		if(x==1,{selKey = 4;~sendOSC.sendMsg("/2/synth", "A R P Octave");},{selKey = 0})
+	},
+	'/2/toggle4');
 
 )
 ///////////////////
@@ -229,20 +334,21 @@ OSCdef('Synth_Phase',
 			last_data = data;
 			last_address = address;
 			if(address == 100){
-				if( data < 70,{
-					//x.set(\freq1, data*4,\freq2, data*5);
-					~reverb.set(\amp, 1-data/70)},{~reverb.set(\amp, 1);'over 200'.postln()};);
+				if( data < 100,{
+					~synth_reverb.set(\gain, data/100)},{~synth_reverb.set(\gain, 1);'over 200'.postln()};);
+
 			}
 		};
 	}.loop;
 }).play;
 )
+/*
 (
 x = SynthDef("tutorial-map", { arg freq1 = 440, freq2 = 440;
     Out.ar(0, SinOsc.ar([freq1, freq2], 0, 0.1));
 }).play(s);
 )
-~reverb.set(\amp, 0.5)
+*/
 // CLOSE CONNECTIONS
 (
 ~getValues.stop;

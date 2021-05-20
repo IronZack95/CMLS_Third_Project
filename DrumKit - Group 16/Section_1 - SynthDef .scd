@@ -98,7 +98,7 @@ SynthDef(\gabberkick, {
     snd = RLPF.ar(snd, 8000, 0.7);
     snd = snd * Env([0, 1, 0.7, 0.7, 0], [0.001, 0.01, 0.3, 0.02]).ar(2);
     snd = (snd * 0.6).clip(-1, 1);
-    Out.ar(out, Pan2.ar(snd, \pan.kr(0), \amp.kr(0.1)));
+    Out.ar(out, 0.8*Pan2.ar(snd, \pan.kr(0), \amp.kr(0.1)));
 }).add;
 
 // 4-Snare
@@ -240,7 +240,7 @@ SynthDef(\pluck, {arg out = 0, amp = 0.1, freq = 440, decay = 5, coef = 0.1;
 		coef: coef);
 	snd = LeakDC.ar(snd).clip2;
 
-	Out.ar(out, snd * env);
+	Out.ar(out, [snd * env,snd * env]);
 }).add;
 
 // 2-Synth
@@ -556,6 +556,75 @@ SynthDef(\sawSynth, { arg freq = 440, amp = 0.1, att = 0.1, rel = 2, lofreq = 10
     snd = Mix.ar(snd);
 	snd = Pan2.ar(snd, pan);
     Out.ar(out, snd);
+}).add;
+
+SynthDef(\harpsichord2, {
+	arg
+	//Standard Values
+	out = 0, amp = 0.1, freq = 440, pan = 0, rel = 5,
+	//Pluck arguments (blend goes from 0 to 1)
+	trig = 1, coef = 0.1, blend = 0.6;
+
+	var exciter, root, octave, snd;
+
+        // You can use white noise here, but Pink is more realistic
+	exciter = PinkNoise.ar(amp);
+
+	// Fundamental
+        root = Pluck.ar(
+	        in: exciter,
+	        trig: trig,
+	        maxdelaytime: 1/freq,
+	        delaytime: 1/freq,
+	        decaytime: rel,
+	        coef: coef,
+	        mul: blend
+        );
+
+	// Octave Above
+	octave = Pluck.ar(
+	        in: exciter,
+	        trig: trig,
+	        maxdelaytime: 1/(2 * freq),
+	        delaytime: 1/(2 * freq),
+	        decaytime: rel,
+	        coef: coef,
+	        mul: (1 - blend)
+        );
+
+	// Output Stuff
+	snd = Mix.ar(root + octave);
+	snd = Limiter.ar(snd);
+
+    DetectSilence.ar(in: snd, doneAction: 2);
+
+	Out.ar(out, Pan2.ar(snd, pan));
+}
+).add;
+
+SynthDef(\organDonor,{
+	arg out = 0, pan = 0.0, freq = 440, amp = 0.1, gate = 1, att = 0.01, dec = 0.5, sus = 1, rel = 0.5, lforate = 10, lfowidth = 0.01, cutoff = 100, rq = 0.5;
+
+	var vibrato, pulse, filter, env;
+	vibrato = SinOsc.ar(lforate, Rand(0, 2.0));
+	// up octave, detune by 4 cents
+	// 11.96.midiratio = 1.9953843530485
+	// up octave and a half, detune up by 10 cents
+	// 19.10.midiratio = 3.0139733629359
+	freq = freq * [1, 1.9953843530485, 3.0139733629359];
+	freq = freq * (1.0 + (lfowidth * vibrato));
+	pulse = VarSaw.ar(
+		freq: freq,
+		iphase: Rand(0.0, 1.0) ! 3,
+		width: Rand(0.3, 0.5) ! 3,
+		mul: [1.0,0.7,0.3]);
+	pulse = Mix(pulse);
+	filter = RLPF.ar(pulse, cutoff, rq);
+	env = EnvGen.ar(
+		envelope: Env.adsr(att, dec, sus, rel, amp),
+		gate: gate,
+		doneAction: 2);
+	Out.ar(out, Pan2.ar(filter * env, pan));
 }).add;
 
 )
