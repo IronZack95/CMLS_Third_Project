@@ -3,9 +3,11 @@
 //////////////////////////////
 
 (
+s.boot;
+
 // 1-Light Kick
 SynthDef(\kick, {
-    |out = 0, pan = 0, amp = 0.3|
+    |out = 0, pan = 0, amp = 0.4|
     var body, bodyFreq, bodyAmp;
     var pop, popFreq, popAmp;
     var click, clickAmp;
@@ -30,7 +32,7 @@ SynthDef(\kick, {
 
 // 2-Techno Kick
 SynthDef(\technokick, {
-	| freq=51.913087197493, amp=0.5, rel=0.28571428571429, out=0, click=0.008, spread=0.1, damp=0.6 gate=1 |
+	| freq=51.913087197493, amp=0.1, rel=0.28571428571429, out=0, click=0.008, spread=0.1, damp=0.6 gate=1 |
 	var sig, env1, aEnv, env2, wEnv, vEnv, low, high, dry, verb, verbHi, verbLo;
 	// env.ar is really good for this since thie envelopes are so short
 	env1 = EnvGen.ar(Env.adsr(0,0.1,0,0, curve: -4, bias: 1)); // initial attack
@@ -139,7 +141,7 @@ SynthDef(\neurosnare, {| out = 0|
 
 
 // 6-HiHat
-SynthDef(\hihat, {arg out = 0, amp = 0.5, att = 0.01, rel = 0.2, ffreq = 6000, pan = 0;
+SynthDef(\hihat, {arg out = 0, amp = 0.3, att = 0.01, rel = 0.1, ffreq = 6000, pan = 0;
 	var env, snd;
 	env = Env.perc(att, rel, amp).kr(doneAction: 2);
 	snd = WhiteNoise.ar;
@@ -541,18 +543,20 @@ SynthDef(\feedbackPad3, {
 ).add;
 
 
-SynthDef(\sawSynth, { arg freq = 440, amp = 0.1, att = 0.1, rel = 2, lofreq = 1000, hifreq = 3000, pan = 0, out = 0;
+SynthDef(\sawSynth, { arg freq = 440, addfreq = 0, amp = 0.1, att = 0.1, rel = 1, lofreq = 1000, hifreq = 3000, pan = 0, out = 0;
     var env, snd;
     env = Env.perc(
 		attackTime: att,
 		releaseTime: rel,
 		level: amp
 	).kr(doneAction: 2);
-    snd = Saw.ar(freq: freq * [0.99, 1, 1.001, 1.008], mul: env);
+	snd = Saw.ar(freq: freq + addfreq * [0.99, 1, 1.001, 1.008], mul: env);
+
 	snd = LPF.ar(
 		in: snd,
 		freq: LFNoise2.kr(1).range(lofreq, hifreq)
 	);
+	//snd = LPF.ar(in: snd, freq: );
     snd = Mix.ar(snd);
 	snd = Pan2.ar(snd, pan);
     Out.ar(out, snd);
