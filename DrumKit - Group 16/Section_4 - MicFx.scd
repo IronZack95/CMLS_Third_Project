@@ -28,7 +28,7 @@ SynthDef("theMixer", { arg outBus = 0, effect  = 8, dust = 2 , gain = 1;
 )
 
 (
-//~voice =  Synth.new(\wet, [\inBus, ~drum]);
+~voice =  Synth.new(\wet, [\inBus, ~drum]);
 Synth.tail(s, "filteredDust");
 Synth.tail(s, "preDelay");
 Synth.tail(s, "combs");

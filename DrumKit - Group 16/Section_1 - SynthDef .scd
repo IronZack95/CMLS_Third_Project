@@ -3,7 +3,6 @@
 //////////////////////////////
 
 (
-s.boot;
 
 // 1-Light Kick
 SynthDef(\kick, {

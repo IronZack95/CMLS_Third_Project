@@ -9,6 +9,13 @@ MIDIClient.sources;           // elenco i controller in entrata e uscita
 MIDIClient.destinations;
 MIDIIn.connectAll;
 
+// carico le impostazioni per il server
+s.options.protocol = \tcp; // set to use tcp
+s.options.bindAddress = "0.0.0.0"; // allow connections from any address
+s.options.maxLogins = 2; // set to correct number of clients
+s.reboot;
+
+
 SynthDef(\dry, {arg outBus=0 , inBus, gain = 1;
 	var input;
 	input=In.ar(inBus,2); //get two channels of input starting (and ending) on bus 0
