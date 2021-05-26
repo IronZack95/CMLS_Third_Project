@@ -10,6 +10,7 @@ MIDIIn.connectAll;
 
 //// CLIENT SECTION
 s.options.maxLogins = 2;
+s.boot;
 // creo l'oggetto remote server
 r = Server(
     \remote,
@@ -23,7 +24,7 @@ r.addr.connect;
 r.startAliveThread( 0 );
 r.doWhenBooted({ "remote tcp server started".postln; r.notify; r.initTree });
 // imposto il server Remoto come quello di defoult
-Server.default = r;
+//Server.default = r;
 //plotto informazioni sul server
 r.clientID;
 r.plotTree;

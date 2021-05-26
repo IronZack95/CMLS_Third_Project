@@ -1,15 +1,25 @@
 (
-s.options.maxLogins = 2;
+s.options.maxLogins = 8;
 // creo l'oggetto remote server
+
 r = Server(
     \remote,
     // example NetAddr of the machine that runs scsynth on standard port
     //NetAddr("192.168.1.8", 57110),
 	NetAddr("ironzckserver.ddns.net", 57110),
     s.options,        // make sure all remote servers use the same options
-    2                // and when desired, set fixed client by hand
+    1                // and when desired, set fixed client by hand
 );
-
+/*
+r = Server(
+    \remote,
+    // example NetAddr of the machine that runs scsynth on standard port
+    //NetAddr("192.168.1.8", 57110),
+	NetAddr("miosupercollider.ddns.net", 57110),
+    s.options,        // make sure all remote servers use the same options
+    8                // and when desired, set fixed client by hand
+);
+*/
 r.addr.connect;
 r.startAliveThread( 0 );
 r.doWhenBooted({ "remote tcp server started".postln; r.notify; r.initTree });
