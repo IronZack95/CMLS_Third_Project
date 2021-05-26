@@ -7,7 +7,6 @@
 // MIDI section
 ///////////////////
 
-
 // Inizializzo gruppi per effetti, pad e synth
 
 (
@@ -20,13 +19,29 @@ var loopDrumID = MIDIClient.sources.detect { |e| e.device.containsi("loopMIDI Dr
 var loopSynthID = MIDIClient.sources.detect { |e| e.device.containsi("loopMIDI Synth") }.uid();
 var selKey = 0;
 
-//// SERVER SECTION
-s.options.protocol = \tcp; // set to use tcp
-s.options.bindAddress = "0.0.0.0"; // allow connections from any address
-s.options.maxLogins = 2; // set to correct number of clients
-s.reboot;
-s.meter;
-s.plotTree;
+//// CLIENT SECTION
+s.options.maxLogins = 2;
+// creo l'oggetto remote server
+
+r = Server(
+    \remote,
+    // example NetAddr of the machine that runs scsynth on standard port
+    //NetAddr("192.168.1.8", 57110),
+	NetAddr("ironzckserver.ddns.net", 57110),
+    s.options,        // make sure all remote servers use the same options
+    2                // and when desired, set fixed client by hand
+);
+r.addr.connect;
+r.startAliveThread( 0 );
+r.doWhenBooted({ "remote tcp server started".postln; r.notify; r.initTree });
+// imposto il server Remoto come quello di defoult
+Server.default = r;
+//plotto informazioni sul server
+r.clientID;
+r.plotTree;
+r.defaultGroupID;
+'number of allowed servers'.postln();
+r.options.maxLogins;
 ////
 
          // collego i controller

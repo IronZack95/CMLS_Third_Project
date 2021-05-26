@@ -3,6 +3,10 @@
 //////////////////////////////
 
 (
+MIDIClient.init;
+MIDIClient.sources;           // elenco i controller in entrata e uscita
+MIDIClient.destinations;
+MIDIIn.connectAll;
 
 // 1-Light Kick
 SynthDef(\kick, {

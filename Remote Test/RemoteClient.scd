@@ -1,4 +1,3 @@
-
 (
 s.options.maxLogins = 2;
 // creo l'oggetto remote server
@@ -26,7 +25,7 @@ r.defaultGroupID;     // 268435457
 r.options.maxLogins    // 8
 )
 
-r.addr.disconnect
+r.addr.disconnect;
 
 // Synth
 x = Synth(\default, nil);
