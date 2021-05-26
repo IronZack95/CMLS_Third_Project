@@ -20,15 +20,6 @@ var loopDrumID = MIDIClient.sources.detect { |e| e.device.containsi("loopMIDI Dr
 var loopSynthID = MIDIClient.sources.detect { |e| e.device.containsi("loopMIDI Synth") }.uid();
 var selKey = 0;
 
-//// SERVER SECTION
-s.options.protocol = \tcp; // set to use tcp
-s.options.bindAddress = "0.0.0.0"; // allow connections from any address
-s.options.maxLogins = 2; // set to correct number of clients
-s.reboot;
-s.meter;
-s.plotTree;
-////
-
          // collego i controller
 ~sendOSC = NetAddr.new("192.168.1.5", 7771);    // OSC sending section
 ~reciveOSC = NetAddr.new("127.0.0.1", NetAddr.langPort);
