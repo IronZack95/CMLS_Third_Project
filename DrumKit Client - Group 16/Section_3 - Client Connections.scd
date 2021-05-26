@@ -8,6 +8,46 @@
 ///////////////////
 
 // Inizializzo gruppi per effetti, pad e synth
+(
+
+// Synth
+x = Synth(\default, nil );
+x.release;
+
+x = { Dust.ar(10!2).lag(0.002) }.play(r);
+x.release(2);
+s.freeAll
+r.freeAll
+Pbind(\degree, Pseq((0..7).mirror), \dur, 0.15,\server,s).play;
+
+(dur: inf).play;
+s.freeAll;
+
+// JITLib nodeproxies
+Ndef(\x, { Dust.ar(10 ! 2) });
+Ndef(\x).play;
+Ndef(\x).filter(10, { |in| Ringz.ar(in, [600, 800], 0.03) }).play;
+Ndef(\x).end(3);
+
+
+
+
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 (
 var noteArrayL = Array.newClear(128); // array note launchpad
