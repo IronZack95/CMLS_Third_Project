@@ -1,3 +1,8 @@
+// CMLS - GROUP 16
+////////////////////////////////////
+// SECTION 4 - MIC EFFECTS SECTION
+////////////////////////////////////
+
 (
 SynthDef("filteredDust", {arg outBus=2 ;
     Out.ar(outBus,Mix.arFill(10, { Resonz.ar(Dust.ar(0.2, 50), Rand(200, 3200), 0.003) })
