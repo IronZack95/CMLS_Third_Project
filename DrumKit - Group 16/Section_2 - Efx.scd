@@ -4,8 +4,6 @@
 ////////////////////////////////////
 
 (
-
-
 SynthDef(\dry, {arg outBus=0 , inBus, gain = 1;
 	var input;
 	input=In.ar(inBus,2); //get two channels of input starting (and ending) on bus 0
@@ -52,7 +50,6 @@ SynthDef(\phasing, {arg outBus=0 , inBus, gain = 1 , freq=0.2;
 // Si muove col mouse
 
 (
-
 {
 	var source = Impulse.ar(MouseX.kr(1,10));
 	var sound, feedback;
