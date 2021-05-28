@@ -644,24 +644,4 @@ SynthDef(\organDonor,{
 }).add;
 
 )
-/////////////////// -> Da Eliminare
-// solo per sentire i suoni della DrumKit in sequenza
 
-(
-var base;
-
-base = Pbind(\amp, 0.3);
-
-Ppar([
-    Pbindf(
-        base,
-		\instrument, Pseq([\technokick, "spacey", \pluck, \keyboard, \kick, \snare], inf),
-        \dur, Pseq([4, 3, 3, 2, 4], inf)
-    ),
-    Pbindf(
-        base,
-		\instrument, Pseq([Pn(\hihat, 16), Pn(\clap, 16)], inf),
-        \dur, Pseq([Rest(2), 2, Rest(2), 2], inf)
-    )
-]).play(TempoClock(2.3 * 4));
-)
