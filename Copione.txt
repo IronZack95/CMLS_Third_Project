@@ -11,10 +11,12 @@ the midi devices and the server, and a part of network connections,
 in which we have created a framework for future expansions and greater interactions,
 over the distances.
 
-////  LORENZO
+////  LORENZO -> Slide 2
 
+Our Drumkit is composed by 9 drums or percussive sounds that can be played with
+a launchpad but also by 5 synthesisers that can be played with a MIDI keyboard.
 
-////    ALESSANDRO
-
+Moreover, 4 different effects can be applied to the sounds.
+The musician can also add his own voice to the composition using an input microphone.
 
 //// LUCA
