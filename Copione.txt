@@ -19,4 +19,20 @@ a launchpad but also by 5 synthesisers that can be played with a MIDI keyboard.
 Moreover, 4 different effects can be applied to the sounds.
 The musician can also add his own voice to the composition using an input microphone.
 
-//// LUCA
+To better manage and modify the different sections we divided the code in 5 different Supercollider scd files.
+
+We also dedicated a specific code file to the serial, OSC and MIDI connections with the external devices.
+
+////    ALESSANDRO -> Slides 3 and 4
+
+//// LUCA -> Slide 5
+
+Last but not least, we wanted to create a procedural animation capable of changing
+and moving acording to the different sounds of the drum kit.
+We used a specific programming language called Processing.
+We started from a code that we found on the web that allows to make an animation
+on mp3 track and we implemented it in such a way that it works on the real audio
+buffer to make a cool animation in real time!
+We used the MInim library and a particoular driver called "virtual audio-cable"
+to take the audio that came out from an application on the computer and reinsert
+it into the computer as an input to another application.
