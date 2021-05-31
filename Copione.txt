@@ -1,13 +1,20 @@
-////  LORENZO
-
-
-
 //// ZACCARIA
+Good afternoon everybody,
+we are group sixteen, today we present our drum kit project.
+
+Our main goal was to create a comfortable and ALL-IN-ONE interactive environment to facilitate
+a musician during a live performance, expanding as much as possible the possibility
+of interaction between human and hardware, without having to worry about the codes.
+
+In particular, we can divide this setup into a part of direct interaction between
+the midi devices and the server, and a part of network connections,
+in which we have created a framework for future expansions and greater interactions,
+over the distances.
+
+////  LORENZO
 
 
 ////    ALESSANDRO
 
 
 //// LUCA
-
-
