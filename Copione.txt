@@ -25,6 +25,20 @@ We also dedicated a specific code file to the serial, OSC and MIDI connections w
 
 ////    ALESSANDRO -> Slides 3 and 4
 
+	As far as it concerns the Interaction Design, 3 communications methods have been implemented:
+
+	MIDI: implemented 3 devices (Keyboard, launchPad and launchControl)
+
+	OSC: implemented via TouchOSC which is an app that allows the user to create his own interface to control the messages.	     
+	
+	Serial: Lastly, for the serial standard, an ultrasound sensor has been implemented for controlling the reverb effect.
+
+	Regarding the Network Architecture instead, we wanted a piece of software that could allow many users, disregarding where they phisically are,
+	to play at the same time.
+	In order to do so, the Network Architecture has been structured in a Multi-client fashion; it means that a single server applies changes on the signal
+	while many clients control it.
+	Finally we have decided to create an animation which my colleague Luca is going to discuss about.
+
 //// LUCA -> Slide 5
 
 Last but not least, we wanted to create a procedural animation capable of changing
