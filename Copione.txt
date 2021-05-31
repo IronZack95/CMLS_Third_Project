@@ -2,8 +2,7 @@
 Good afternoon everybody,
 we are group sixteen, today we present our drum kit project.
 
-Our main goal was to create a comfortable and ALL-IN-ONE interactive environment to facilitate
-a musician during a live performance, expanding as much as possible the possibility
+Our main goal was to create a comfortable and ALL-IN-ONE interactive environment to facilitate a musician during a live performance, expanding as much as possible the possibility
 of interaction between human and hardware, without having to worry about the codes.
 
 In particular, we can divide this setup into a part of direct interaction between
