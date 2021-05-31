@@ -9,6 +9,47 @@
 
 // Inizializzo gruppi per effetti, pad e synth
 (
+
+// Synth
+x = Synth(\default, nil );
+x.release;
+
+x = { Dust.ar(10!2).lag(0.002) }.play(r);
+x.release(2);
+s.freeAll
+r.freeAll
+Pbind(\degree, Pseq((0..7).mirror), \dur, 0.15,\server,r).play;
+
+(dur: inf).play;
+s.freeAll;
+
+// JITLib nodeproxies
+Ndef(\x, { Dust.ar(10 ! 2) });
+Ndef(\x).play;
+Ndef(\x).filter(10, { |in| Ringz.ar(in, [600, 800], 0.03) }).play;
+Ndef(\x).end(3);
+
+
+
+
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(
 var noteArrayL = Array.newClear(128); // array note launchpad
 var noteArrayK = Array.newClear(128); // array note key
 var launchpadID = MIDIClient.sources.detect { |e| e.device.containsi("Launchpad S") }.uid();
@@ -18,8 +59,10 @@ var loopDrumID = MIDIClient.sources.detect { |e| e.device.containsi("loopMIDI Dr
 var loopSynthID = MIDIClient.sources.detect { |e| e.device.containsi("loopMIDI Synth") }.uid();
 var selKey = 0;
 
+
+
          // collego i controller
-~sendOSC = NetAddr.new("192.168.1.2", 7771);    // OSC sending section
+~sendOSC = NetAddr.new("192.168.1.5", 7771);    // OSC sending section
 ~reciveOSC = NetAddr.new("127.0.0.1", NetAddr.langPort);
 
 ~drum = Bus.audio(s, 2);     // creo gruppi di suoni
@@ -49,7 +92,7 @@ var selKey = 0;
 
 
 
-//d = ParGroup.new;hgfd
+//d = ParGroup.new;
 //g = ParGroup.new;
 
 /// inizializzo gli effetti
@@ -154,7 +197,7 @@ MIDIFunc.noteOff({arg vel, note;
 },nil,nil,loopDrumID);
 
 //////////////////////// LAUNCH CONTROL CC
-
+//////////////////////// LAUNCH CONTROL CC
 MIDIFunc.cc({arg vel, note;
 	var gain = vel/127;
 	if (note == 21){

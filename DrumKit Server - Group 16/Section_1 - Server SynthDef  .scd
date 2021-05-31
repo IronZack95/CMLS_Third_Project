@@ -8,7 +8,6 @@ MIDIClient.sources;           // elenco i controller in entrata e uscita
 MIDIClient.destinations;
 MIDIIn.connectAll;
 
-
 //// SERVER SECTION
 s.options.protocol = \tcp; // set to use tcp
 s.options.bindAddress = "0.0.0.0"; // allow connections from any address
@@ -45,7 +44,7 @@ SynthDef(\kick, {
 
 // 2-Techno Kick
 SynthDef(\technokick, {
-	| freq=51.913087197493, amp=0.05, rel=0.28571428571429, out=0, click=0.008, spread=0.1, damp=0.6 gate=1 |
+	| freq=51.913087197493, amp=0.1, rel=0.28571428571429, out=0, click=0.008, spread=0.1, damp=0.6 gate=1 |
 	var sig, env1, aEnv, env2, wEnv, vEnv, low, high, dry, verb, verbHi, verbLo;
 	// env.ar is really good for this since thie envelopes are so short
 	env1 = EnvGen.ar(Env.adsr(0,0.1,0,0, curve: -4, bias: 1)); // initial attack
@@ -645,4 +644,24 @@ SynthDef(\organDonor,{
 }).add;
 
 )
+/////////////////// -> Da Eliminare
+// solo per sentire i suoni della DrumKit in sequenza
 
+(
+var base;
+
+base = Pbind(\amp, 0.3);
+
+Ppar([
+    Pbindf(
+        base,
+		\instrument, Pseq([\technokick, "spacey", \pluck, \keyboard, \kick, \snare], inf),
+        \dur, Pseq([4, 3, 3, 2, 4], inf)
+    ),
+    Pbindf(
+        base,
+		\instrument, Pseq([Pn(\hihat, 16), Pn(\clap, 16)], inf),
+        \dur, Pseq([Rest(2), 2, Rest(2), 2], inf)
+    )
+]).play(TempoClock(2.3 * 4));
+)

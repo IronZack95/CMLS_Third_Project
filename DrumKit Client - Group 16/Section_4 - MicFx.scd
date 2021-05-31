@@ -1,8 +1,3 @@
-// CMLS - GROUP 16
-////////////////////////////////////
-// SECTION 4 - MIC EFFECTS SECTION
-////////////////////////////////////
-
 (
 SynthDef("filteredDust", {arg outBus=2 ;
     Out.ar(outBus,Mix.arFill(10, { Resonz.ar(Dust.ar(0.2, 50), Rand(200, 3200), 0.003) })
@@ -34,9 +29,10 @@ SynthDef("theMixer", { arg outBus = 0, effect  = 8, dust = 2 , gain = 1;
 
 (
 ~voice =  Synth.new(\wet, [\inBus, ~drum]);
-Synth.tail(s, "filteredDust");
-Synth.tail(s, "preDelay");
-Synth.tail(s, "combs");
-Synth.tail(s, "allpass");
-Synth.tail(s, "theMixer");
+Synth.tail(r, "filteredDust");
+Synth.tail(r, "preDelay");
+Synth.tail(r, "combs");
+Synth.tail(r, "allpass");
+Synth.tail(r, "theMixer");
 )
+r.freeAll

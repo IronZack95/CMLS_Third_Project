@@ -1,7 +1,6 @@
 ///////////////////
 // Serial section
 ///////////////////
-
 ~interface.stop
 
 ~port = SerialPort.new("COM3", 9600);
