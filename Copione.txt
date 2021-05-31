@@ -1,4 +1,4 @@
-//// ZACCARIA
+//// ZACCARIA -> Slide 1
 Good afternoon everybody,
 we are group sixteen, today we present our drum kit project.
 
@@ -11,9 +11,8 @@ the midi devices and the server, and a part of network connections,
 in which we have created a framework for future expansions and greater interactions,
 over the distances.
 
-////  LORENZO -> Slide 2
-
-Our Drumkit is composed by 9 drums or percussive sounds that can be played with
+//// LORENZO -> Slide 2
+Our DrumKit is composed by 9 drums or percussive sounds that can be played with
 a launchpad but also by 5 synthesisers that can be played with a MIDI keyboard.
 
 Moreover, 4 different effects can be applied to the sounds.
@@ -23,38 +22,31 @@ To better manage and modify the different sections we divided the code in 5 diff
 
 We also dedicated a specific code file to the serial, OSC and MIDI connections with the external devices.
 
-////    ALESSANDRO -> Slides 3 and 4
+//// ALESSANDRO -> Slides 3 and 4
+As far as it concerns the Interaction Design, 3 communications methods have been implemented:
 
-	As far as it concerns the Interaction Design, 3 communications methods have been implemented:
+MIDI: implemented 3 devices (Keyboard, launchPad and launchControl).
+We have managed to create a piece of code that allows Supercollider to automatically recognise all the devices.
 
-	MIDI: implemented 3 devices (Keyboard, launchPad and launchControl).
-	      We have managed to create a piece of code that allows Supercollider to automatically recognise all the devices.
-
-	OSC: implemented via TouchOSC which is an app that allows the user to create his own interface to control the messages.
-	     A routine function allows the UI to update automatically.    
+OSC: implemented via TouchOSC which is an app that allows the user to create his own interface to control the messages. A routine function allows the UI to update automatically.    
 	
-	Serial: Lastly, for the serial standard, an ultrasound sensor has been implemented for controlling the reverb effect.
+Serial: Lastly, for the serial standard, an ultrasound sensor has been implemented for controlling the reverb effect.
 
+Moreover we have decided to implement a way for playing without coding, via a DAW.
+In order to do so we have used A third party program known as LoopMidi.
+Thanks to it we can give to Supercollider DAW signals which are then sent back to it.
 
-	Moreover we have decided to implement a way for playing without coding, via a DAW.
-	In order to do so we have used A third party program known as LoopMidi.
-	Thanks to it we can give to Supercollider DAW signals which are then sent back to it.
-
-
-	Regarding the Network Architecture instead, we wanted a piece of software that could allow many users, disregarding where they phisically are,
-	to play at the same time.
-	In order to do so, the Network Architecture has been structured in a Multi-client fashion; it means that a single server applies changes on the signal
-	while many clients control it.
-	Finally we have decided to create an animation which my colleague Luca is going to discuss about.
+Regarding the Network Architecture instead, we wanted a piece of software that could allow many users, disregarding where they phisically are, to play at the same time.
+In order to do so, the Network Architecture has been structured in a Multi-client fashion; it means that a single server applies changes on the signal while many clients control it.
+Finally we have decided to create an animation which my colleague Luca is going to discuss about.
 
 //// LUCA -> Slide 5
-
 Last but not least, we wanted to create a procedural animation capable of changing
-and moving acording to the different sounds of the drum kit.
+and moving according to the different sounds of the drum kit.
 We used a specific programming language called Processing.
 We started from a code that we found on the web that allows to make an animation
 on mp3 track and we implemented it in such a way that it works on the real audio
 buffer to make a cool animation in real time!
-We used the MInim library and a particoular driver called "virtual audio-cable"
+We used the MInim library and a particular driver called "virtual audio-cable"
 to take the audio that came out from an application on the computer and reinsert
 it into the computer as an input to another application.
