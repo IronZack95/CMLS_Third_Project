@@ -27,11 +27,19 @@ We also dedicated a specific code file to the serial, OSC and MIDI connections w
 
 	As far as it concerns the Interaction Design, 3 communications methods have been implemented:
 
-	MIDI: implemented 3 devices (Keyboard, launchPad and launchControl)
+	MIDI: implemented 3 devices (Keyboard, launchPad and launchControl).
+	      We have managed to create a piece of code that allows Supercollider to automatically recognise all the devices.
 
-	OSC: implemented via TouchOSC which is an app that allows the user to create his own interface to control the messages.	     
+	OSC: implemented via TouchOSC which is an app that allows the user to create his own interface to control the messages.
+	     A routine function allows the UI to update automatically.    
 	
 	Serial: Lastly, for the serial standard, an ultrasound sensor has been implemented for controlling the reverb effect.
+
+
+	Moreover we have decided to implement a way for playing without coding, via a DAW.
+	In order to do so we have used A third party program known as LoopMidi.
+	Thanks to it we can give to Supercollider DAW signals which are then sent back to it.
+
 
 	Regarding the Network Architecture instead, we wanted a piece of software that could allow many users, disregarding where they phisically are,
 	to play at the same time.
