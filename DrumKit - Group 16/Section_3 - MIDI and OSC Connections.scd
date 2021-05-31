@@ -7,9 +7,7 @@
 // MIDI section
 ///////////////////
 
-
 // Inizializzo gruppi per effetti, pad e synth
-
 (
 var noteArrayL = Array.newClear(128); // array note launchpad
 var noteArrayK = Array.newClear(128); // array note key
@@ -21,7 +19,7 @@ var loopSynthID = MIDIClient.sources.detect { |e| e.device.containsi("loopMIDI S
 var selKey = 0;
 
          // collego i controller
-~sendOSC = NetAddr.new("192.168.1.5", 7771);    // OSC sending section
+~sendOSC = NetAddr.new("192.168.1.2", 7771);    // OSC sending section
 ~reciveOSC = NetAddr.new("127.0.0.1", NetAddr.langPort);
 
 ~drum = Bus.audio(s, 2);     // creo gruppi di suoni
@@ -51,7 +49,7 @@ var selKey = 0;
 
 
 
-//d = ParGroup.new;
+//d = ParGroup.new;hgfd
 //g = ParGroup.new;
 
 /// inizializzo gli effetti
@@ -156,7 +154,7 @@ MIDIFunc.noteOff({arg vel, note;
 },nil,nil,loopDrumID);
 
 //////////////////////// LAUNCH CONTROL CC
-//////////////////////// LAUNCH CONTROL CC
+
 MIDIFunc.cc({arg vel, note;
 	var gain = vel/127;
 	if (note == 21){
